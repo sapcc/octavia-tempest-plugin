@@ -48,34 +48,34 @@ RETRY_MAX = 5
 class LoadBalancerBaseTest(validators.ValidatorsMixin,
                            RBAC_tests.RBACTestsMixin, test.BaseTestCase):
     """Base class for load balancer tests."""
-
-    if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
-        credentials = [
-            'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
-            ['lb_member', CONF.load_balancer.member_role],
-            ['lb_member2', CONF.load_balancer.member_role]]
-    elif CONF.load_balancer.enforce_new_defaults:
-        credentials = [
-            'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
-            ['lb_observer', CONF.load_balancer.observer_role, 'reader'],
-            ['lb_global_observer', CONF.load_balancer.global_observer_role,
-             'reader'],
-            ['lb_member', CONF.load_balancer.member_role, 'member'],
-            ['lb_member2', CONF.load_balancer.member_role, 'member'],
-            ['lb_member_not_default_member', CONF.load_balancer.member_role]]
-    else:
-        credentials = [
-            'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
-            ['lb_observer', CONF.load_balancer.observer_role, 'reader'],
-            ['lb_global_observer', CONF.load_balancer.global_observer_role,
-             'reader'],
-            ['lb_member', CONF.load_balancer.member_role],
-            ['lb_member2', CONF.load_balancer.member_role]]
+    credentials = ['admin', 'primary', ['network_admin']]
+    # if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
+    #     credentials = [
+    #         'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
+    #         ['lb_member', CONF.load_balancer.member_role],
+    #         ['lb_member2', CONF.load_balancer.member_role]]
+    # elif CONF.load_balancer.enforce_new_defaults:
+    #     credentials = [
+    #         'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
+    #         ['lb_observer', CONF.load_balancer.observer_role, 'reader'],
+    #         ['lb_global_observer', CONF.load_balancer.global_observer_role,
+    #          'reader'],
+    #         ['lb_member', CONF.load_balancer.member_role, 'member'],
+    #         ['lb_member2', CONF.load_balancer.member_role, 'member'],
+    #         ['lb_member_not_default_member', CONF.load_balancer.member_role]]
+    # else:
+    #     credentials = [
+    #         'admin', 'primary', ['lb_admin', CONF.load_balancer.admin_role],
+    #         ['lb_observer', CONF.load_balancer.observer_role, 'reader'],
+    #         ['lb_global_observer', CONF.load_balancer.global_observer_role,
+    #          'reader'],
+    #         ['lb_member', CONF.load_balancer.member_role],
+    #         ['lb_member2', CONF.load_balancer.member_role]]
 
     # If scope enforcement is enabled, add in the system scope credentials.
     # The project scope is already handled by the above credentials.
-    if CONF.enforce_scope.octavia:
-        credentials.extend(['system_admin', 'system_reader'])
+    # if CONF.enforce_scope.octavia:
+    #     credentials.extend(['system_admin', 'system_reader'])
 
     # A tuple of credentials that will be allocated by tempest using the
     # 'credentials' list above. These are used to build RBAC test lists.
@@ -85,6 +85,7 @@ class LoadBalancerBaseTest(validators.ValidatorsMixin,
             allocated_creds.append('os_roles_' + cred[0])
         else:
             allocated_creds.append('os_' + cred)
+
     # Tests shall not mess with the list of allocated credentials
     allocated_credentials = tuple(allocated_creds)
 
@@ -163,7 +164,11 @@ class LoadBalancerBaseTest(validators.ValidatorsMixin,
     def setup_clients(cls):
         """Setup client aliases."""
         super(LoadBalancerBaseTest, cls).setup_clients()
-        lb_admin_prefix = cls.os_roles_lb_admin.load_balancer_v2
+        cls.os_roles_lb_admin = cls.os_roles_network_admin
+        # lb_admin_prefix = cls.os_roles_lb_admin.load_balancer_v2
+        lb_admin_prefix = cls.os_roles_network_admin.load_balancer_v2
+        cls.os_roles_lb_member = cls.os_roles_network_admin
+        cls.os_roles_lb_member2 = cls.os_roles_network_admin
         cls.lb_mem_float_ip_client = cls.os_roles_lb_member.floating_ips_client
         cls.lb_mem_keypairs_client = cls.os_roles_lb_member.keypairs_client
         cls.lb_mem_net_client = cls.os_roles_lb_member.networks_client

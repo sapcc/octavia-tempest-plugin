@@ -2206,7 +2206,7 @@ class MemberAPITest(test_base.LoadBalancerBaseTest):
             CONF.load_balancer.build_interval,
             CONF.load_balancer.build_timeout,
             pool_id=pool_id)
-        status = const.OFFLINE
+        status = const.DRAINING
         if CONF.load_balancer.test_with_noop:
             status = const.NO_MONITOR
         member = waiters.wait_for_status(

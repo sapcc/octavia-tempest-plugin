@@ -615,7 +615,8 @@ class LoadBalancerAPITest(test_base.LoadBalancerBaseTest):
         self.assertEqual(lb_description, lb[const.DESCRIPTION])
         UUID(lb[const.ID])
         self.assertEqual(lb_name, lb[const.NAME])
-        self.assertEqual(const.OFFLINE, lb[const.OPERATING_STATUS])
+        # No OFFLINE status for ccloud
+        # self.assertEqual(const.OFFLINE, lb[const.OPERATING_STATUS])
         self.assertEqual(self.os_roles_lb_member.credentials.project_id,
                          lb[const.PROJECT_ID])
         self.assertEqual(CONF.load_balancer.provider, lb[const.PROVIDER])
@@ -711,7 +712,8 @@ class LoadBalancerAPITest(test_base.LoadBalancerBaseTest):
         self.assertEqual(lb_description, lb[const.DESCRIPTION])
         UUID(lb[const.ID])
         self.assertEqual(lb_name, lb[const.NAME])
-        self.assertEqual(const.OFFLINE, lb[const.OPERATING_STATUS])
+        # No OFFLINE status for ccloud
+        # self.assertEqual(const.OFFLINE, lb[const.OPERATING_STATUS])
         self.assertEqual(self.os_roles_lb_member.credentials.project_id,
                          lb[const.PROJECT_ID])
         self.assertEqual(CONF.load_balancer.provider, lb[const.PROVIDER])

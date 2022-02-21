@@ -258,13 +258,13 @@ class LoadBalancerBaseTest(validators.ValidatorsMixin,
         elif CONF.load_balancer.test_network_override:
             if conf_lb.test_subnet_override:
                 override_subnet = show_subnet(conf_lb.test_subnet_override)
+                override_subnet = override_subnet.get('subnet')
             else:
                 override_subnet = None
 
             show_net = cls.lb_mem_net_client.show_network
             override_network = show_net(conf_lb.test_network_override)
             override_network = override_network.get('network')
-
             cls.lb_member_vip_net = override_network
             cls.lb_member_vip_subnet = override_subnet
             cls.lb_member_1_net = override_network
@@ -607,7 +607,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
             keypair_name)
 
         if (CONF.load_balancer.enable_security_groups and
-                CONF.network_feature_enabled.port_security):
+                CONF.network_feature_enabled.port_security) or CONF.load_balancer.create_security_group:
             # Set up the security group for the webservers
             SG_name = data_utils.rand_name('lb_member_SG')
             cls.lb_member_sec_group = (
@@ -912,7 +912,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
             'imageRef': CONF.compute.image_ref,
             'key_name': cls.lb_member_keypair['name']}
         if (CONF.load_balancer.enable_security_groups and
-                CONF.network_feature_enabled.port_security):
+                CONF.network_feature_enabled.port_security) or CONF.load_balancer.create_security_group:
             server_kwargs['security_groups'] = [
                 {'name': cls.lb_member_sec_group['name']}]
         if not CONF.load_balancer.disable_boot_network:

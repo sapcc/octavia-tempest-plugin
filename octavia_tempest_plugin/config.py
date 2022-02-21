@@ -242,6 +242,9 @@ OctaviaGroup = [
                      'the new keystone default roles? This configuration '
                      'value should be same as octavia.conf: '
                      '[oslo_policy].enforce_new_defaults option.'),
+    cfg.BoolOpt('create_security_group',
+                default=False,
+                help='Create security group.'),
 ]
 
 lb_feature_enabled_group = cfg.OptGroup(name='loadbalancer-feature-enabled',

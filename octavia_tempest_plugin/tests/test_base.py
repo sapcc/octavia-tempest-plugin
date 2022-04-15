@@ -742,7 +742,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
                     SGr['id'])
 
             LOG.info('lb_member_sec_group: {}'.format(cls.lb_member_sec_group))
-
+            LOG.info('Security group information: {}'.format(cls.lb_mem_SG_client.show_security_group(cls.lb_member_sec_group["id"])))
         # Setup backend member reencryption PKI
         cls._create_backend_reencryption_pki()
 

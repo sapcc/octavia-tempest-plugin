@@ -126,7 +126,8 @@ class L7RuleScenarioTest(test_base.LoadBalancerBaseTest):
         parser.parse(l7rule[const.UPDATED_AT])
         UUID(l7rule[const.ID])
         # Operating status will be OFFLINE while admin_state_up = False
-        self.assertEqual(const.OFFLINE, l7rule[const.OPERATING_STATUS])
+        # Octavia F5 driver does not support OFFLINE statuses for L7 rules
+        # self.assertEqual(const.OFFLINE, l7rule[const.OPERATING_STATUS])
 
         equal_items = [const.ADMIN_STATE_UP, const.TYPE, const.VALUE,
                        const.COMPARE_TYPE, const.KEY, const.INVERT]

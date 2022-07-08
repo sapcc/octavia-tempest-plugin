@@ -210,7 +210,9 @@ class ListenerAPITest(test_base.LoadBalancerBaseTest):
         UUID(listener[const.ID])
         # Operating status is a measured status, so no-op will not go online
         if CONF.load_balancer.test_with_noop:
-            self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            # Octavia F5 driver does not support OFFLINE statuses for listeners
+            # self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            pass
         else:
             self.assertEqual(const.ONLINE, listener[const.OPERATING_STATUS])
 
@@ -853,7 +855,9 @@ class ListenerAPITest(test_base.LoadBalancerBaseTest):
         UUID(listener[const.ID])
         # Operating status is a measured status, so no-op will not go online
         if CONF.load_balancer.test_with_noop:
-            self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            # Octavia F5 driver does not support OFFLINE statuses for listeners
+            # self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            pass
         else:
             self.assertEqual(const.ONLINE, listener[const.OPERATING_STATUS])
 
@@ -976,7 +980,8 @@ class ListenerAPITest(test_base.LoadBalancerBaseTest):
         parser.parse(listener[const.UPDATED_AT])
         UUID(listener[const.ID])
         # Operating status will be OFFLINE while admin_state_up = False
-        self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+        # Octavia F5 driver does not support OFFLINE statuses for listeners
+        # self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
         self.assertEqual(protocol, listener[const.PROTOCOL])
         self.assertEqual(protocol_port, listener[const.PROTOCOL_PORT])
         self.assertEqual(200, listener[const.CONNECTION_LIMIT])
@@ -1111,7 +1116,9 @@ class ListenerAPITest(test_base.LoadBalancerBaseTest):
         self.assertTrue(listener[const.ADMIN_STATE_UP])
         # Operating status is a measured status, so no-op will not go online
         if CONF.load_balancer.test_with_noop:
-            self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            # Octavia F5 driver does not support OFFLINE statuses for listeners
+            # self.assertEqual(const.OFFLINE, listener[const.OPERATING_STATUS])
+            pass
         else:
             self.assertEqual(const.ONLINE, listener[const.OPERATING_STATUS])
         self.assertEqual(400, listener[const.CONNECTION_LIMIT])

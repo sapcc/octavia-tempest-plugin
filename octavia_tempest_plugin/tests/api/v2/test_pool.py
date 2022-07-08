@@ -454,8 +454,9 @@ class PoolAPITest(test_base.LoadBalancerBaseTest):
                 CONF.load_balancer.build_interval,
                 CONF.load_balancer.build_timeout)
         else:
-            self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
-
+            # Octavia F5 Driver does not support OFFLINE status updating
+            # self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+            pass
         self.assertEqual(pool_name, pool[const.NAME])
         self.assertEqual(pool_description, pool[const.DESCRIPTION])
         self.assertTrue(pool[const.ADMIN_STATE_UP])
@@ -468,8 +469,9 @@ class PoolAPITest(test_base.LoadBalancerBaseTest):
             # ONLINE if it is attached to a listener and is a live test
             self.assertEqual(const.ONLINE, pool[const.OPERATING_STATUS])
         else:
-            # OFFLINE if it is just on the LB directly or is in noop mode
-            self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+            # Octavia F5 Driver does not support OFFLINE status updating
+            # self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+            pass
         self.assertEqual(pool_protocol, pool[const.PROTOCOL])
         self.assertEqual(1, len(pool[const.LOADBALANCERS]))
         self.assertEqual(self.lb_id, pool[const.LOADBALANCERS][0][const.ID])
@@ -1098,8 +1100,8 @@ class PoolAPITest(test_base.LoadBalancerBaseTest):
         parser.parse(pool[const.CREATED_AT])
         parser.parse(pool[const.UPDATED_AT])
         UUID(pool[const.ID])
-        # Operating status for pools will always be offline without members
-        self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+        # Octavia F5 Driver does not support OFFLINE status updating
+        # self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
         self.assertEqual(pool_protocol, pool[const.PROTOCOL])
         self.assertEqual(1, len(pool[const.LOADBALANCERS]))
         self.assertEqual(self.lb_id, pool[const.LOADBALANCERS][0][const.ID])
@@ -1333,8 +1335,8 @@ class PoolAPITest(test_base.LoadBalancerBaseTest):
         parser.parse(pool[const.CREATED_AT])
         parser.parse(pool[const.UPDATED_AT])
         UUID(pool[const.ID])
-        # Operating status for pools will always be offline without members
-        self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+        # Octavia F5 Driver does not support OFFLINE status updating
+        # self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
         self.assertEqual(pool_protocol, pool[const.PROTOCOL])
         self.assertEqual(1, len(pool[const.LOADBALANCERS]))
         self.assertEqual(self.lb_id, pool[const.LOADBALANCERS][0][const.ID])

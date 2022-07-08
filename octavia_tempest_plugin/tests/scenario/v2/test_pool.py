@@ -442,7 +442,8 @@ class PoolScenarioTest(test_base.LoadBalancerBaseTest):
             self.assertEqual(listener_id, pool[const.LISTENERS][0][const.ID])
         else:
             self.assertEmpty(pool[const.LISTENERS])
-            self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
+            # Octavia F5 driver does not support OFFLINE statuses for pool
+            # self.assertEqual(const.OFFLINE, pool[const.OPERATING_STATUS])
         self.assertEqual(algorithm, pool[const.LB_ALGORITHM])
 
         if session_persistence == const.SESSION_PERSISTENCE_APP_COOKIE:

@@ -318,6 +318,7 @@ class ValidatorsMixin(test.BaseTestCase):
         self.assertEqual(traffic_member_count, len(response_counts))
 
         # Ensure both members got the same number of responses
+        LOG.debug('Responses count from balancers: %s', response_counts)
         self.assertEqual(1, len(set(response_counts.values())))
 
     def assertConsistentResponse(self, response, url, method='GET', repeat=10,
@@ -399,7 +400,7 @@ class ValidatorsMixin(test.BaseTestCase):
                     CA_certs_path=CA_certs_path, source_port=source_port,
                     request_timeout=request_timeout,
                     requests_session=requests_session)
-
+                LOG.info('Response data %s' % data)
                 if data in response_counts:
                     response_counts[data] += 1
                 else:
@@ -410,8 +411,9 @@ class ValidatorsMixin(test.BaseTestCase):
                               response_counts)
                     time.sleep(1)
                     return
-            except Exception:
+            except Exception as e:
                 LOG.warning('Server is not passing initial traffic. Waiting.')
+                LOG.error('Occured exception is %s' % e)
                 time.sleep(1)
 
         LOG.debug('Loadbalancer wait for load balancer response totals: %s',
@@ -420,4 +422,5 @@ class ValidatorsMixin(test.BaseTestCase):
                    'the timeout period. Failing test.' % (vip_address,
                                                           protocol_port))
         LOG.error(message)
+
         raise Exception(message)

@@ -19,6 +19,7 @@ import shlex
 import string
 import subprocess
 import tempfile
+import time
 
 from cryptography.hazmat.primitives import serialization
 from oslo_log import log as logging
@@ -749,7 +750,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
         # Create webserver 1 instance
         server_details = cls._create_webserver('lb_member_webserver1',
                                                cls.lb_member_1_net)
-
+        time.sleep(300)
         cls.lb_member_webserver1 = server_details['server']
         cls.webserver1_ip = server_details.get('ipv4_address')
         cls.webserver1_ipv6 = server_details.get('ipv6_address')
@@ -767,7 +768,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
         # Create webserver 2 instance
         server_details = cls._create_webserver('lb_member_webserver2',
                                                cls.lb_member_2_net)
-
+        time.sleep(300)
         cls.lb_member_webserver2 = server_details['server']
         cls.webserver2_ip = server_details.get('ipv4_address')
         cls.webserver2_ipv6 = server_details.get('ipv6_address')
@@ -797,7 +798,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
         cls._install_start_webserver(cls.webserver1_public_ip,
                                      cls.lb_member_keypair['private_key'],
                                      cls.webserver1_response)
-
+        time.sleep(300)
         # Validate webserver 1
         cls._validate_webserver(cls.webserver1_public_ip,
                                 cls.webserver1_response)
@@ -810,7 +811,7 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
         cls._install_start_webserver(cls.webserver2_public_ip,
                                      cls.lb_member_keypair['private_key'],
                                      cls.webserver2_response, revoke_cert=True)
-
+        time.sleep(300)
         # Validate webserver 2
         cls._validate_webserver(cls.webserver2_public_ip,
                                 cls.webserver2_response)
@@ -1024,15 +1025,17 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
                                   '/proc/sys/vm/overcommit_memory"')
 
         # The initial process also supports HTTPS and HTTPS with client auth
-        linux_client.exec_command(
+        LOG.info('Start HTTPS server: %s' % linux_client.exec_command(
             'sudo screen -d -m {0} -port 80 -id {1} -https_port 443 -cert {2} '
             '-key {3} -https_client_auth_port 9443 -client_ca {4}'.format(
                 const.TEST_SERVER_BINARY, start_id, const.TEST_SERVER_CERT,
-                const.TEST_SERVER_KEY, const.TEST_SERVER_CLIENT_CA))
-
-        linux_client.exec_command('sudo screen -d -m {0} -port 81 '
-                                  '-id {1}'.format(const.TEST_SERVER_BINARY,
-                                                   start_id + 1))
+                const.TEST_SERVER_KEY, const.TEST_SERVER_CLIENT_CA)))
+        LOG.info('Start HTTP server: %s' % linux_client.exec_command(
+            'sudo screen -d -m {0} -port 81 '
+            '-id {1}'.format(const.TEST_SERVER_BINARY, start_id + 1)))
+        LOG.info('Command result: %s' % linux_client.exec_command('sudo ps aux | grep test_server'))
+        LOG.info('Files in DEV_SHM_PATH: %s' % linux_client.exec_command('sudo ls -la /home/ccloud'))
+        LOG.info('Get listening ports: %s' % linux_client.exec_command('sudo ss -lt'))
 
     # Cirros does not configure the assigned IPv6 address by default
     # so enable it manually like tempest does here:

@@ -197,6 +197,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             CONF.load_balancer.check_interval,
             CONF.load_balancer.check_timeout)
 
+        time.sleep(300)
         # Send some traffic
         self.check_members_balanced(
             self.lb_vip_address, protocol_port=protocol_port,
@@ -210,6 +211,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @decorators.idempotent_id('6751135d-e15a-4e22-89f4-bfcc3408d424')
     def test_basic_http_traffic(self):
         pool_id = self._listener_pool_create(const.HTTP, 80)[1]
+        time.sleep(120)
         self._test_basic_traffic(const.HTTP, 80, pool_id)
 
     @testtools.skipIf(CONF.load_balancer.test_with_noop,
@@ -334,13 +336,14 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             CONF.load_balancer.build_interval,
             CONF.load_balancer.build_timeout,
             pool_id=pool_id)
-        waiters.wait_for_status(
-            self.mem_member_client.show_member,
-            member3_id, const.OPERATING_STATUS,
-            const.OFFLINE,
-            CONF.load_balancer.build_interval,
-            CONF.load_balancer.build_timeout,
-            pool_id=pool_id)
+        # F5 driver don't support offline status for members
+        # waiters.wait_for_status(
+        #     self.mem_member_client.show_member,
+        #     member3_id, const.OPERATING_STATUS,
+        #     const.OFFLINE,
+        #     CONF.load_balancer.build_interval,
+        #     CONF.load_balancer.build_timeout,
+        #     pool_id=pool_id)
 
         # Send some traffic and verify it is balanced
         self.check_members_balanced(self.lb_vip_address,
@@ -413,13 +416,14 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             CONF.load_balancer.build_interval,
             CONF.load_balancer.build_timeout,
             pool_id=pool_id)
-        waiters.wait_for_status(
-            self.mem_member_client.show_member,
-            member3_id, const.OPERATING_STATUS,
-            const.OFFLINE,
-            CONF.load_balancer.build_interval,
-            CONF.load_balancer.build_timeout,
-            pool_id=pool_id)
+        # F5 driver don't support offline status for members
+        # waiters.wait_for_status(
+        #     self.mem_member_client.show_member,
+        #     member3_id, const.OPERATING_STATUS,
+        #     const.OFFLINE,
+        #     CONF.load_balancer.build_interval,
+        #     CONF.load_balancer.build_timeout,
+        #     pool_id=pool_id)
 
         # Send some traffic and verify it is *unbalanced*, as expected
         self.check_members_balanced(self.lb_vip_address,
@@ -452,13 +456,14 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             CONF.load_balancer.build_interval,
             CONF.load_balancer.build_timeout,
             pool_id=pool_id)
-        waiters.wait_for_status(
-            self.mem_member_client.show_member,
-            member3_id, const.OPERATING_STATUS,
-            const.OFFLINE,
-            CONF.load_balancer.build_interval,
-            CONF.load_balancer.build_timeout,
-            pool_id=pool_id)
+        # F5 driver don't support offline status for members
+        # waiters.wait_for_status(
+        #     self.mem_member_client.show_member,
+        #     member3_id, const.OPERATING_STATUS,
+        #     const.OFFLINE,
+        #     CONF.load_balancer.build_interval,
+        #     CONF.load_balancer.build_timeout,
+        #     pool_id=pool_id)
 
         # Send some traffic and verify it is balanced again
         self.check_members_balanced(self.lb_vip_address,

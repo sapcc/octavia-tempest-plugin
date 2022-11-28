@@ -383,7 +383,7 @@ class ValidatorsMixin(test.BaseTestCase):
     def _wait_for_lb_functional(
             self, vip_address, traffic_member_count, protocol_port, protocol,
             HTTPS_verify, client_cert_path=None, CA_certs_path=None,
-            request_interval=2, request_timeout=10, requests_session=None,
+            request_interval=2, request_timeout=30, requests_session=None,
             source_port=None):
         start = time.time()
         response_counts = {}

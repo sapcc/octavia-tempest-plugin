@@ -177,7 +177,7 @@ class ValidatorsMixin(test.BaseTestCase):
     def make_request(
             self, vip_address, protocol=const.HTTP, HTTPS_verify=True,
             protocol_port=80, requests_session=None, client_cert_path=None,
-            CA_certs_path=None, request_timeout=2, source_port=None):
+            CA_certs_path=None, request_timeout=30, source_port=None):
         """Make a request to a VIP.
 
         :param vip_address: The VIP address to test.

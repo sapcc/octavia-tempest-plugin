@@ -557,7 +557,7 @@ class ListenerAPITest(test_base.LoadBalancerBaseTest):
                 CONF.load_balancer.build_timeout)
             listener3 = waiters.wait_for_status(
                 self.mem_listener_client.show_listener, listener3[const.ID],
-                const.OPERATING_STATUS, const.OFFLINE,
+                const.OPERATING_STATUS, const.ONLINE,
                 CONF.load_balancer.build_interval,
                 CONF.load_balancer.build_timeout)
 

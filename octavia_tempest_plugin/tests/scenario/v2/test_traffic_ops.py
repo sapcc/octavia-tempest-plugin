@@ -261,7 +261,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     def test_basic_http_traffic(self):
         pool_id = self._listener_pool_create(const.HTTP, 80)[1]
         time.sleep(120)
-        self._test_basic_traffic(const.HTTP, 80, pool_id)
+        self._test_basic_traffic(const.HTTP, 80, pool_id, persistent=False)
 
     @testtools.skipIf(CONF.load_balancer.test_with_noop,
                       'Traffic tests will not work in noop mode.')
@@ -475,7 +475,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @decorators.idempotent_id('a16f8eb4-a77c-4b0e-8b1b-91c237039713')
     def test_healthmonitor_http_traffic(self):
         pool_id = self._listener_pool_create(const.HTTP, 82)[1]
-        self._test_healthmonitor_traffic(const.HTTP, 82, pool_id)
+        self._test_healthmonitor_traffic(const.HTTP, 82, pool_id, persistent=False)
 
     @decorators.idempotent_id('22f00c34-343b-4aa9-90be-4567ecf85772')
     def test_healthmonitor_tcp_traffic(self):
@@ -846,7 +846,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
         pool_id = self._listener_pool_create(
             const.HTTP, 87,
             pool_algorithm=const.LB_ALGORITHM_LEAST_CONNECTIONS)[1]
-        self._test_basic_traffic(const.HTTP, 87, pool_id)
+        self._test_basic_traffic(const.HTTP, 87, pool_id, persistent=False)
 
     @testtools.skipIf(CONF.load_balancer.test_with_noop,
                       'Traffic tests will not work in noop mode.')
@@ -1340,7 +1340,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             const.HTTP, listener_port, insert_headers_dic={
                 const.X_FORWARDED_FOR: "true"})
         self._test_basic_traffic(
-            const.HTTP, listener_port, pool_id)
+            const.HTTP, listener_port, pool_id, persistent=False)
 
         # Initiate HTTP traffic
         test_url = 'http://{}:{}/request'.format(

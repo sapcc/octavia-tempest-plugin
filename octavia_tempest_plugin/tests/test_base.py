@@ -715,6 +715,50 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
                 cls.lb_mem_SGr_client.delete_security_group_rule,
                 cls.lb_mem_SGr_client.show_security_group_rule,
                 SGr['id'])
+            # Create a security group rule to allow 85 (barbican tests)
+            SGr = cls.lb_mem_SGr_client.create_security_group_rule(
+                direction='ingress',
+                security_group_id=cls.lb_member_sec_group['id'],
+                protocol='tcp',
+                ethertype='IPv4',
+                port_range_min=85,
+                port_range_max=85)['security_group_rule']
+            cls.addClassResourceCleanup(
+                waiters.wait_for_not_found,
+                cls.lb_mem_SGr_client.delete_security_group_rule,
+                cls.lb_mem_SGr_client.show_security_group_rule,
+                SGr['id'])
+            # Create a security group rule to allow 8443 (barbican tests)
+            SGr = cls.lb_mem_SGr_client.create_security_group_rule(
+                direction='ingress',
+                security_group_id=cls.lb_member_sec_group['id'],
+                protocol='tcp',
+                ethertype='IPv4',
+                port_range_min=8443,
+                port_range_max=8443)['security_group_rule']
+            cls.addClassResourceCleanup(
+                waiters.wait_for_not_found,
+                cls.lb_mem_SGr_client.delete_security_group_rule,
+                cls.lb_mem_SGr_client.show_security_group_rule,
+                SGr['id'])
+            cls.addClassResourceCleanup(
+                waiters.wait_for_not_found,
+                cls.lb_mem_SGr_client.delete_security_group_rule,
+                cls.lb_mem_SGr_client.show_security_group_rule,
+                SGr['id'])
+            # Create a security group rule to allow 84 (barbican tests)
+            SGr = cls.lb_mem_SGr_client.create_security_group_rule(
+                direction='ingress',
+                security_group_id=cls.lb_member_sec_group['id'],
+                protocol='tcp',
+                ethertype='IPv4',
+                port_range_min=84,
+                port_range_max=84)['security_group_rule']
+            cls.addClassResourceCleanup(
+                waiters.wait_for_not_found,
+                cls.lb_mem_SGr_client.delete_security_group_rule,
+                cls.lb_mem_SGr_client.show_security_group_rule,
+                SGr['id'])
             if CONF.load_balancer.test_with_ipv6:
                 # Create a security group rule to allow 80-81 (test webservers)
                 SGr = cls.lb_mem_SGr_client.create_security_group_rule(
@@ -785,7 +829,6 @@ class LoadBalancerBaseTestWithCompute(LoadBalancerBaseTest):
                     SGr['id'])
 
             LOG.info('lb_member_sec_group: {}'.format(cls.lb_member_sec_group))
-            LOG.info('Security group information: {}'.format(cls.lb_mem_SG_client.show_security_group(cls.lb_member_sec_group["id"])))
         # Setup backend member reencryption PKI
         cls._create_backend_reencryption_pki()
 

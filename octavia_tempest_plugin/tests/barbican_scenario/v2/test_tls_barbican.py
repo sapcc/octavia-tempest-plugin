@@ -1328,7 +1328,7 @@ class TLSWithBarbicanTest(test_base.LoadBalancerBaseTestWithCompute):
                                 CONF.load_balancer.build_timeout)
         # Test with no CA validation
         self.check_members_balanced(self.lb_vip_address, protocol=const.HTTP,
-                                    protocol_port=84, persistent=False)
+                                    protocol_port=84)
 
         # Test with CA validation - invalid CA
         pool_update_kwargs = {

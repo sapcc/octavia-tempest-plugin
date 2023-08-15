@@ -1408,10 +1408,9 @@ class TLSWithBarbicanTest(test_base.LoadBalancerBaseTestWithCompute):
         }
         # Specify an http/1.x alpn to work around HTTP healthchecks
         # on older haproxy versions when alpn includes h2
-        # Disable ALPN
-        # if self.mem_listener_client.is_version_supported(
-        #         self.api_version, '2.24'):
-        #     pool_kwargs[const.ALPN_PROTOCOLS] = ['http/1.0', 'http/1.1']
+        if self.mem_listener_client.is_version_supported(
+                self.api_version, '2.24'):
+            pool_kwargs[const.ALPN_PROTOCOLS] = ['http/1.0', 'http/1.1']
 
         pool = self.mem_pool_client.create_pool(**pool_kwargs)
         pool_id = pool[const.ID]

@@ -1110,7 +1110,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @decorators.idempotent_id('04399db0-04f0-4cb5-bb27-a12bf18bfe08')
     def test_http_LC_listener_with_allowed_cidrs(self):
         self._test_listener_with_allowed_cidrs(
-            const.HTTP, 90, const.LB_ALGORITHM_LEAST_CONNECTIONS)
+            const.HTTP, 90, const.LB_ALGORITHM_LEAST_CONNECTIONS, delay=0.2)
 
     @decorators.idempotent_id('3d8d95b6-55e8-4bb9-b474-4ac35abaff22')
     def test_tcp_LC_listener_with_allowed_cidrs(self):
@@ -1120,22 +1120,22 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @decorators.idempotent_id('7456b558-9add-4e0e-988e-06803f8047f7')
     def test_udp_LC_listener_with_allowed_cidrs(self):
         self._test_listener_with_allowed_cidrs(
-            const.UDP, 92, const.LB_ALGORITHM_LEAST_CONNECTIONS)
+            const.UDP, 92, const.LB_ALGORITHM_LEAST_CONNECTIONS, delay=0.2)
 
     @decorators.idempotent_id('13b0f2de-9934-457b-8be0-f1bffc6915a0')
     def test_http_RR_listener_with_allowed_cidrs(self):
         self._test_listener_with_allowed_cidrs(
-            const.HTTP, 93, const.LB_ALGORITHM_ROUND_ROBIN)
+            const.HTTP, 93, const.LB_ALGORITHM_ROUND_ROBIN, delay=0.2)
 
     @decorators.idempotent_id('8bca1325-f894-494d-95c6-3ea4c3df6a0b')
     def test_tcp_RR_listener_with_allowed_cidrs(self):
         self._test_listener_with_allowed_cidrs(
-            const.TCP, 94, const.LB_ALGORITHM_ROUND_ROBIN)
+            const.TCP, 94, const.LB_ALGORITHM_ROUND_ROBIN, delay=0.2)
 
     @decorators.idempotent_id('93675cc3-e765-464b-9563-e0848dc75330')
     def test_udp_RR_listener_with_allowed_cidrs(self):
         self._test_listener_with_allowed_cidrs(
-            const.UDP, 95, const.LB_ALGORITHM_ROUND_ROBIN)
+            const.UDP, 95, const.LB_ALGORITHM_ROUND_ROBIN, delay=0.2)
 
     @decorators.idempotent_id('fb5f35c1-08c9-43f7-8ed1-0395a3ef4735')
     def test_http_SI_listener_with_allowed_cidrs(self):
@@ -1168,7 +1168,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             const.UDP, 101, const.LB_ALGORITHM_SOURCE_IP_PORT, delay=0.2)
 
     def _test_listener_with_allowed_cidrs(self, protocol, protocol_port,
-                                          algorithm, delay=None):
+                                          algorithm, delay=0.2):
         """Tests traffic through a loadbalancer with allowed CIDRs set.
 
         * Set up listener with allowed CIDRS (allow all) on a loadbalancer.
@@ -1291,6 +1291,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
         members = 2
         if algorithm == const.LB_ALGORITHM_SOURCE_IP:
             members = 1
+        time.sleep(120)
         self.check_members_balanced(
             self.lb_vip_address, protocol=protocol,
             protocol_port=protocol_port, persistent=False,

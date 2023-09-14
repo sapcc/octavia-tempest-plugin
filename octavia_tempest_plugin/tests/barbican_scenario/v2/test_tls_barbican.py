@@ -1534,7 +1534,6 @@ class TLSWithBarbicanTest(test_base.LoadBalancerBaseTestWithCompute):
 
         # Make sure the health monitor has brought the members up after the
         # the pool update.
-        time.sleep(3600)
         waiters.wait_for_status(
             self.mem_member_client.show_member, member1[const.ID],
             const.OPERATING_STATUS, const.ONLINE,

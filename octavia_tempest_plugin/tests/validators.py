@@ -105,7 +105,7 @@ class ValidatorsMixin(test.BaseTestCase):
                 return response_text
             except requests.exceptions.Timeout:
                 # Don't sleep as we have already waited the interval.
-                LOG.info('Request for {} timed out. Retrying.'.format(URL))
+                LOG.info('Request for %s timed out. Retrying.', URL)
             except (exceptions.InvalidHttpSuccessCode,
                     exceptions.InvalidHTTPResponseBody,
                     requests.exceptions.SSLError):
@@ -113,8 +113,10 @@ class ValidatorsMixin(test.BaseTestCase):
                     session.close()
                 raise
             except Exception as e:
-                LOG.info('Validate URL got exception: {0}. '
-                         'Retrying.'.format(e))
+                if "[Errno 98] Address already in use" in str(e):
+                    raise e
+                LOG.info('Validate URL got exception: %s. '
+                         'Retrying.', e)
                 time.sleep(request_interval)
         if requests_session is None:
             session.close()
@@ -415,6 +417,9 @@ class ValidatorsMixin(test.BaseTestCase):
                 LOG.warning('Server is not passing initial traffic. Waiting.')
                 LOG.error('Occured exception is %s' % e)
                 time.sleep(1)
+                if "[Errno 98] Address already in use" in str(e):
+                    raise e
+            time.sleep(request_interval)
 
         LOG.debug('Loadbalancer wait for load balancer response totals: %s',
                   response_counts)
@@ -446,8 +451,8 @@ class ValidatorsMixin(test.BaseTestCase):
         retry_number = 0
         received_data = None
         while retry_number < number_of_retries:
-            LOG.info('make_udp_requests_with_retries attempt '
-                     'number:{}'.format(retry_number))
+            LOG.info('make_udp_requests_with_retries attempt number: %s',
+                     retry_number)
             retry_number += 1
             try:
                 received_data = self.make_udp_request(
@@ -455,6 +460,5 @@ class ValidatorsMixin(test.BaseTestCase):
                     source_port=src_port)
                 break
             except Exception as e:
-                LOG.warning('make_udp_request has failed with: '
-                            '{}'.format(e))
+                LOG.warning('make_udp_request has failed with: %s', e)
         return received_data

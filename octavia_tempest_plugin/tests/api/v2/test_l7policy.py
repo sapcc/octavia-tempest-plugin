@@ -62,6 +62,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
         listener = cls.mem_listener_client.create_listener(**listener_kwargs)
         cls.listener_id = listener[const.ID]
 
+        cls.addClassResourceCleanup(
+            cls.mem_listener_client.cleanup_listener,
+            cls.listener_id,
+            lb_client=cls.mem_lb_client, lb_id=cls.lb_id)
+
         waiters.wait_for_status(cls.mem_lb_client.show_loadbalancer,
                                 cls.lb_id, const.PROVISIONING_STATUS,
                                 const.ACTIVE,
@@ -78,6 +83,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         pool = cls.mem_pool_client.create_pool(**pool_kwargs)
         cls.pool_id = pool[const.ID]
+
+        cls.addClassResourceCleanup(
+            cls.mem_pool_client.cleanup_pool,
+            cls.pool_id,
+            lb_client=cls.mem_lb_client, lb_id=cls.lb_id)
 
         waiters.wait_for_status(cls.mem_lb_client.show_loadbalancer,
                                 cls.lb_id, const.PROVISIONING_STATUS,
@@ -134,23 +144,20 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         # Test that a user without the load balancer role cannot
         # create a l7policy
-        expected_allowed = []
-        if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
-            expected_allowed = ['os_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if expected_allowed:
-            self.check_create_RBAC_enforcement(
-                'L7PolicyClient', 'create_l7policy',
-                expected_allowed,
-                status_method=self.mem_lb_client.show_loadbalancer,
-                obj_id=self.lb_id, **l7policy_kwargs)
+        expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                            'os_roles_lb_member']
+        self.check_create_RBAC_enforcement(
+            'L7PolicyClient', 'create_l7policy',
+            expected_allowed,
+            status_method=self.mem_lb_client.show_loadbalancer,
+            obj_id=self.lb_id, **l7policy_kwargs)
 
         l7policy = self.mem_l7policy_client.create_l7policy(**l7policy_kwargs)
+
+        self.addClassResourceCleanup(
+            self.mem_l7policy_client.cleanup_l7policy,
+            l7policy[const.ID],
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
 
         waiters.wait_for_status(
             self.mem_lb_client.show_loadbalancer, self.lb_id,
@@ -365,8 +372,8 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
         if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
             expected_allowed = ['os_primary', 'os_roles_lb_member2']
         if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_admin', 'os_primary',
-                                'os_roles_lb_member2', 'os_roles_lb_observer',
+            expected_allowed = ['os_primary', 'os_roles_lb_member2',
+                                'os_roles_lb_observer',
                                 'os_roles_lb_global_observer']
         if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
             expected_allowed = ['os_roles_lb_observer', 'os_roles_lb_member2']
@@ -380,11 +387,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
         if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
             expected_allowed = ['os_admin', 'os_roles_lb_member']
         if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_system_admin', 'os_system_reader',
+            expected_allowed = ['os_admin', 'os_roles_lb_admin',
                                 'os_roles_lb_member']
         if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_system_reader',
-                                'os_roles_lb_admin', 'os_roles_lb_member',
+            expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                                'os_roles_lb_member',
                                 'os_roles_lb_global_observer']
         if expected_allowed:
             self.check_list_IDs_RBAC_enforcement(
@@ -406,13 +413,13 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
         #       a superscope of "project_reader". This means it can read
         #       objects in the "admin" credential's project.
         if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_admin', 'os_primary', 'os_system_admin',
-                                'os_system_reader', 'os_roles_lb_observer',
+            expected_allowed = ['os_admin', 'os_primary', 'os_roles_lb_admin',
+                                'os_roles_lb_observer',
                                 'os_roles_lb_global_observer',
                                 'os_roles_lb_member', 'os_roles_lb_member2']
         if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_system_reader',
-                                'os_roles_lb_admin', 'os_roles_lb_observer',
+            expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                                'os_roles_lb_observer',
                                 'os_roles_lb_global_observer',
                                 'os_roles_lb_member', 'os_roles_lb_member2']
         if expected_allowed:
@@ -609,6 +616,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         l7policy = self.mem_l7policy_client.create_l7policy(**l7policy_kwargs)
 
+        self.addClassResourceCleanup(
+            self.mem_l7policy_client.cleanup_l7policy,
+            l7policy[const.ID],
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
+
         waiters.wait_for_status(
             self.mem_lb_client.show_loadbalancer, self.lb_id,
             const.PROVISIONING_STATUS, const.ACTIVE,
@@ -647,22 +659,16 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         # Test that the appropriate users can see or not see the L7 policies
         # based on the API RBAC.
-        expected_allowed = []
-        if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
-            expected_allowed = ['os_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_system_admin', 'os_system_reader',
-                                'os_roles_lb_member']
         if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_system_reader',
-                                'os_roles_lb_admin',
+            expected_allowed = ['os_admin', 'os_roles_lb_admin',
                                 'os_roles_lb_global_observer',
                                 'os_roles_lb_member']
-        if expected_allowed:
-            self.check_show_RBAC_enforcement(
-                'L7PolicyClient', 'show_l7policy',
-                expected_allowed, l7policy[const.ID])
+        else:
+            expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                                'os_roles_lb_member']
+        self.check_show_RBAC_enforcement(
+            'L7PolicyClient', 'show_l7policy',
+            expected_allowed, l7policy[const.ID])
 
     @decorators.idempotent_id('08f73b22-550b-4e5a-b3d6-2ec03251ca13')
     def test_l7policy_update(self):
@@ -720,6 +726,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         l7policy = self.mem_l7policy_client.create_l7policy(**l7policy_kwargs)
 
+        self.addClassResourceCleanup(
+            self.mem_l7policy_client.cleanup_l7policy,
+            l7policy[const.ID],
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
+
         waiters.wait_for_status(
             self.mem_lb_client.show_loadbalancer, self.lb_id,
             const.PROVISIONING_STATUS, const.ACTIVE,
@@ -756,20 +767,12 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         # Test that a user, without the loadbalancer member role, cannot
         # update this L7 policy.
-        expected_allowed = []
-        if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
-            expected_allowed = ['os_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if expected_allowed:
-            self.check_update_RBAC_enforcement(
-                'L7PolicyClient', 'update_l7policy',
-                expected_allowed, None, None, l7policy[const.ID],
-                admin_state_up=True)
+        expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                            'os_roles_lb_member']
+        self.check_update_RBAC_enforcement(
+            'L7PolicyClient', 'update_l7policy',
+            expected_allowed, None, None, l7policy[const.ID],
+            admin_state_up=True)
 
         # Assert we didn't go into PENDING_*
         l7policy_check = self.mem_l7policy_client.show_l7policy(
@@ -858,6 +861,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
         }
         l7policy = self.mem_l7policy_client.create_l7policy(**l7policy_kwargs)
 
+        self.addClassResourceCleanup(
+            self.mem_l7policy_client.cleanup_l7policy,
+            l7policy[const.ID],
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
+
         waiters.wait_for_status(
             self.mem_lb_client.show_loadbalancer,
             self.lb_id, const.PROVISIONING_STATUS,
@@ -867,19 +875,11 @@ class L7PolicyAPITest(test_base.LoadBalancerBaseTest):
 
         # Test that a user without the loadbalancer role cannot delete this
         # L7 policy.
-        expected_allowed = []
-        if CONF.load_balancer.RBAC_test_type == const.OWNERADMIN:
-            expected_allowed = ['os_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.KEYSTONE_DEFAULT_ROLES:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_member']
-        if CONF.load_balancer.RBAC_test_type == const.ADVANCED:
-            expected_allowed = ['os_system_admin', 'os_roles_lb_admin',
-                                'os_roles_lb_member']
-        if expected_allowed:
-            self.check_delete_RBAC_enforcement(
-                'L7PolicyClient', 'delete_l7policy',
-                expected_allowed, None, None, l7policy[const.ID])
+        expected_allowed = ['os_admin', 'os_roles_lb_admin',
+                            'os_roles_lb_member']
+        self.check_delete_RBAC_enforcement(
+            'L7PolicyClient', 'delete_l7policy',
+            expected_allowed, None, None, l7policy[const.ID])
 
         self.mem_l7policy_client.delete_l7policy(l7policy[const.ID])
 

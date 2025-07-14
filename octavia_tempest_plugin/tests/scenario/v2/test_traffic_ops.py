@@ -27,6 +27,7 @@ from tempest.lib import decorators
 from tempest.lib import exceptions
 
 from octavia_tempest_plugin.common import constants as const
+from octavia_tempest_plugin.common.decorators import retry_on_port_in_use
 from octavia_tempest_plugin.tests import test_base
 from octavia_tempest_plugin.tests import waiters
 
@@ -79,7 +80,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
                 floating_network_id=CONF.network.public_network_id,
                 port_id=port_id)
             floating_ip = result['floatingip']
-            LOG.info('lb1_floating_ip: {}'.format(floating_ip))
+            LOG.info('lb1_floating_ip: %s', floating_ip)
             cls.addClassResourceCleanup(
                 waiters.wait_for_not_found,
                 cls.lb_mem_float_ip_client.delete_floatingip,
@@ -120,6 +121,11 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
 
         listener = cls.mem_listener_client.create_listener(**listener_kwargs)
 
+        cls.addClassResourceCleanup(
+            cls.mem_listener_client.cleanup_listener,
+            listener[const.ID],
+            lb_client=cls.mem_lb_client, lb_id=cls.lb_id)
+
         waiters.wait_for_status(cls.mem_lb_client.show_loadbalancer,
                                 cls.lb_id, const.PROVISIONING_STATUS,
                                 const.ACTIVE,
@@ -134,6 +140,11 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
             const.LISTENER_ID: listener[const.ID],
         }
         pool = cls.mem_pool_client.create_pool(**pool_kwargs)
+
+        cls.addClassResourceCleanup(
+            cls.mem_pool_client.cleanup_pool,
+            pool[const.ID],
+            lb_client=cls.mem_lb_client, lb_id=cls.lb_id)
 
         waiters.wait_for_status(cls.mem_lb_client.show_loadbalancer,
                                 cls.lb_id, const.PROVISIONING_STATUS,
@@ -907,17 +918,18 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @testtools.skipIf(CONF.load_balancer.test_with_noop,
                       'Traffic tests will not work in noop mode.')
     @decorators.idempotent_id('a446585b-5651-40ce-a4db-cb2ab4d37c03')
-    def test_source_ip_port_http_traffic(self):
+    @retry_on_port_in_use(start_port=60091)
+    def test_source_ip_port_http_traffic(self, port):
         # This is a special case as the reference driver does not support
         # this test. Since it runs with not_implemented_is_error, we must
         # handle this test case special.
         try:
             pool_id = self._listener_pool_create(
-                const.HTTP, 60091,
+                const.HTTP, port,
                 pool_algorithm=const.LB_ALGORITHM_SOURCE_IP_PORT)[1]
             self._test_basic_traffic(
-                const.HTTP, 60091, pool_id,
-                traffic_member_count=1, persistent=False, source_port=60091)
+                const.HTTP, port, pool_id,
+                traffic_member_count=1, persistent=False, source_port=port)
         except exceptions.NotImplemented as e:
             message = ("The configured provider driver '{driver}' "
                        "does not support a feature required for this "
@@ -929,19 +941,20 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
     @testtools.skipIf(CONF.load_balancer.test_with_noop,
                       'Traffic tests will not work in noop mode.')
     @decorators.idempotent_id('60108f30-d870-487c-ab96-8d8a9b587b94')
-    def test_source_ip_port_tcp_traffic(self):
+    @retry_on_port_in_use(start_port=60092)
+    def test_source_ip_port_tcp_traffic(self, port):
         # This is a special case as the reference driver does not support
         # this test. Since it runs with not_implemented_is_error, we must
         # handle this test case special.
         try:
             listener_id, pool_id = self._listener_pool_create(
-                const.TCP, 60092,
+                const.TCP, port,
                 pool_algorithm=const.LB_ALGORITHM_SOURCE_IP_PORT)
             # Without a delay this can trigger a "Cannot assign requested
             # address" warning setting the source port, leading to failure
             self._test_basic_traffic(
-                const.TCP, 60092, pool_id, traffic_member_count=1,
-                persistent=False, source_port=60092, delay=0.2)
+                const.TCP, port, pool_id, traffic_member_count=1,
+                persistent=False, source_port=port, delay=0.2)
         except exceptions.NotImplemented as e:
             message = ("The configured provider driver '{driver}' "
                        "does not support a feature required for this "
@@ -1347,7 +1360,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
         test_url = 'http://{}:{}/request'.format(
             self.lb_vip_address, listener_port)
         data = self.validate_URL_response(test_url)
-        LOG.info('Received payload is: {}'.format(data))
+        LOG.info('Received payload is: %s', data)
 
         # Detect source IP that is used to create TCP socket toward LB_VIP.
         try:
@@ -1405,7 +1418,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
 
         # Initiate HTTP traffic
         data = self.validate_URL_response(test_url)
-        LOG.info('Received payload is: {}'.format(data))
+        LOG.info('Received payload is: %s', data)
         expected_headers = {const.X_FORWARDED_PORT: '{}'.format(
             listener_port), const.X_FORWARDED_PROTO: const.HTTP.lower()}
         received_headers = _data_parser(data, expected_headers)
@@ -1557,7 +1570,7 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
         # For each test case, update HM and validate that members'
         # "Operation Status" is changed to expected value.
         for ff in flip_flop:
-            LOG.info('Tested test case is: {}'.format(ff))
+            LOG.info('Tested test case is: %s', ff)
             self.mem_healthmonitor_client.update_healthmonitor(
                 hm_id, expected_codes=ff['code'], http_method=ff['mthd'],
                 url_path=ff['url_path'])
@@ -1636,3 +1649,171 @@ class TrafficOperationsScenarioTest(test_base.LoadBalancerBaseTestWithCompute):
         # Make a request to the stats page
         URL = 'http://{0}:{1}/metrics'.format(self.lb_vip_address, '8080')
         self.validate_URL_response(URL, expected_status_code=200)
+
+    @decorators.idempotent_id('b2d5cefe-eac0-4eb3-b7c2-54f22578def9')
+    def test_backup_member(self):
+        if not self.mem_member_client.is_version_supported(
+                self.api_version, '2.1'):
+            raise self.skipException('Backup member support is only available '
+                                     'in Octavia API version 2.1 or newer')
+
+        _LISTENER_PORT = 106
+        # Create a unique listener and pool for this test
+        pool_id = self._listener_pool_create(const.HTTP, _LISTENER_PORT)[1]
+
+        # Create a health monitor on the pool
+        hm_name = data_utils.rand_name("lb_member_hm1-backup-not-active")
+        hm_kwargs = {
+                const.POOL_ID: pool_id,
+                const.NAME: hm_name,
+                const.TYPE: const.HEALTH_MONITOR_HTTP,
+                const.DELAY: 1,
+                const.TIMEOUT: 1,
+                const.MAX_RETRIES: 1,
+                const.MAX_RETRIES_DOWN: 1,
+                const.HTTP_METHOD: const.GET,
+                const.URL_PATH: '/',
+                const.EXPECTED_CODES: '200',
+                const.ADMIN_STATE_UP: True,
+            }
+        hm = self.mem_healthmonitor_client.create_healthmonitor(**hm_kwargs)
+        self.addCleanup(
+            self.mem_healthmonitor_client.cleanup_healthmonitor,
+            hm[const.ID], lb_client=self.mem_lb_client, lb_id=self.lb_id)
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer, self.lb_id,
+            const.PROVISIONING_STATUS, const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+        hm = waiters.wait_for_status(
+            self.mem_healthmonitor_client.show_healthmonitor,
+            hm[const.ID], const.PROVISIONING_STATUS,
+            const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+
+        # Set up Member 1 for Webserver 1
+        member1_name = data_utils.rand_name("lb_member_member1-not-backup")
+        member1_kwargs = {
+            const.POOL_ID: pool_id,
+            const.NAME: member1_name,
+            const.ADMIN_STATE_UP: True,
+            const.ADDRESS: self.webserver1_ip,
+            const.PROTOCOL_PORT: 80,
+        }
+        if self.lb_member_1_subnet:
+            member1_kwargs[const.SUBNET_ID] = self.lb_member_1_subnet[const.ID]
+
+        member1 = self.mem_member_client.create_member(**member1_kwargs)
+        self.addCleanup(
+            self.mem_member_client.cleanup_member,
+            member1[const.ID], pool_id=pool_id,
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer, self.lb_id,
+            const.PROVISIONING_STATUS, const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+
+        # Set up Member 2 for Webserver 2 (Backup)
+        member2_name = data_utils.rand_name("lb_member_member2-backup")
+        member2_kwargs = {
+            const.POOL_ID: pool_id,
+            const.NAME: member2_name,
+            const.ADMIN_STATE_UP: True,
+            const.ADDRESS: self.webserver2_ip,
+            const.PROTOCOL_PORT: 80,
+            const.BACKUP: True,
+        }
+        if self.lb_member_2_subnet:
+            member2_kwargs[const.SUBNET_ID] = self.lb_member_2_subnet[const.ID]
+
+        member2 = self.mem_member_client.create_member(**member2_kwargs)
+        self.addCleanup(
+            self.mem_member_client.cleanup_member,
+            member2[const.ID], pool_id=pool_id,
+            lb_client=self.mem_lb_client, lb_id=self.lb_id)
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer, self.lb_id,
+            const.PROVISIONING_STATUS, const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+
+        url_for_tests = f'http://{self.lb_vip_address}:{_LISTENER_PORT}/'
+
+        # Send some requests and check that only member 1 is responding
+        self.assertConsistentResponse((200, self.webserver1_response),
+                                      url_for_tests)
+
+        # Disable member 1 and check that the backup member takes over
+        member_update_kwargs = {
+            const.POOL_ID: pool_id,
+            const.ADMIN_STATE_UP: False}
+
+        self.mem_member_client.update_member(
+            member1[const.ID], **member_update_kwargs)
+
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer, self.lb_id,
+            const.PROVISIONING_STATUS, const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+        waiters.wait_for_status(
+            self.mem_member_client.show_member,
+            member1[const.ID], const.PROVISIONING_STATUS,
+            const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout,
+            pool_id=pool_id)
+
+        # Send some requests and check that only backup member 2 is responding
+        self.assertConsistentResponse((200, self.webserver2_response),
+                                      url_for_tests)
+
+        # Enable member 1 and check that member 1 traffic resumes
+        member_update_kwargs = {
+            const.POOL_ID: pool_id,
+            const.ADMIN_STATE_UP: True}
+
+        self.mem_member_client.update_member(
+            member1[const.ID], **member_update_kwargs)
+
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer, self.lb_id,
+            const.PROVISIONING_STATUS, const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+        waiters.wait_for_status(
+            self.mem_member_client.show_member,
+            member1[const.ID], const.PROVISIONING_STATUS,
+            const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout,
+            pool_id=pool_id)
+
+        # Send some requests and check that only member 1 is responding
+        self.assertConsistentResponse((200, self.webserver1_response),
+                                      url_for_tests)
+
+        # Delete member 1 and check that backup member 2 is responding
+        self.mem_member_client.delete_member(
+            member1[const.ID],
+            pool_id=pool_id)
+
+        waiters.wait_for_deleted_status_or_not_found(
+            self.mem_member_client.show_member, member1[const.ID],
+            const.PROVISIONING_STATUS,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout,
+            pool_id=pool_id)
+
+        waiters.wait_for_status(
+            self.mem_lb_client.show_loadbalancer,
+            self.lb_id, const.PROVISIONING_STATUS,
+            const.ACTIVE,
+            CONF.load_balancer.check_interval,
+            CONF.load_balancer.check_timeout)
+
+        # Send some requests and check that only backup member 2 is responding
+        self.assertConsistentResponse((200, self.webserver2_response),
+                                      url_for_tests)

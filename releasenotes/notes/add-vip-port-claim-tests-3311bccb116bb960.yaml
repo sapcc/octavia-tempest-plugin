@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Added API tests for load balancers on a VIP port created by the user
+    (vip_port_id): the F5 provider claims the port while the load balancer
+    exists (device_owner, device_id, host binding), refuses further load
+    balancers on it and hands it back when the load balancer is deleted or
+    its creation fails. The tests run when ``[load_balancer] provider`` is
+    an F5 provider.
+  - |
+    The load balancer service client accepts ``availability_zone`` when
+    creating a load balancer.

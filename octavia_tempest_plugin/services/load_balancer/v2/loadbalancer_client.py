@@ -42,7 +42,7 @@ class LoadbalancerClient(base_client.BaseLBaaSClient):
                             vip_address=Unset, vip_network_id=Unset,
                             vip_port_id=Unset, vip_qos_policy_id=Unset,
                             vip_subnet_id=Unset, return_object_only=True,
-                            tags=Unset):
+                            tags=Unset, availability_zone=Unset):
         """Create a loadbalancer.
 
         :param name: Human-readable name of the resource.
@@ -60,6 +60,8 @@ class LoadbalancerClient(base_client.BaseLBaaSClient):
                                   the Virtual IP (VIP).
         :param vip_subnet_id: The ID of the subnet for the Virtual IP (VIP).
         :param tags: A human-readable tags of the resource.
+        :param availability_zone: Name of the availability zone to create the
+                                  load balancer in.
         :param return_object_only: If True, the response returns the object
                                    inside the root tag. False returns the full
                                    response from the API.

@@ -244,6 +244,9 @@ AMPHORA_STATUSES = (
 # Amphora providers list
 AMPHORA_PROVIDERS = ['amphora', 'amphorav2', 'octavia']
 
+# F5 providers list
+F5_PROVIDERS = ['f5', 'F5Networks']
+
 # Flavor capabilities
 LOADBALANCER_TOPOLOGY = 'loadbalancer_topology'
 COMPUTE_FLAVOR = 'compute_flavor'
